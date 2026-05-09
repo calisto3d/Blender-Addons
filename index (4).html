@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Calisto3D Blender Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08080d;
+    --surface: #101018;
+    --card: #151521;
+    --card2: #1a1a28;
+    --border: #2b2b3d;
+    --accent: #7c6fde;
+    --accent2: #5bc8f5;
+    --accent3: #f0a04b;
+    --text: #ececf5;
+    --muted: #9595b5;
+    --soft: #c9c9e4;
+    --radius: 18px;
+    --radius-sm: 10px;
+    --shadow: 0 28px 80px rgba(0,0,0,.45);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(124,111,222,.18), transparent 34rem),
+      radial-gradient(circle at 80% 10%, rgba(91,200,245,.10), transparent 30rem),
+      var(--bg);
+    color: var(--text);
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size: 52px 52px;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,.75), transparent 80%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  .container { width: min(1120px, calc(100% - 40px)); margin: 0 auto; position: relative; z-index: 1; }
+
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(8,8,13,.72);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .nav-inner {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: "Space Grotesk", Inter, sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -.03em;
+  }
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: grid;
+    place-items: center;
+    box-shadow: 0 0 24px rgba(124,111,222,.4);
+  }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .nav-links a { transition: color .18s ease; }
+  .nav-links a:hover { color: var(--text); }
+
+  .hero {
+    padding: 104px 0 72px;
+    text-align: center;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(124,111,222,.45);
+    background: rgba(124,111,222,.12);
+    color: #bbb5ff;
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-family: "Space Grotesk", Inter, sans-serif;
+    font-size: clamp(48px, 8vw, 96px);
+    line-height: .92;
+    letter-spacing: -.07em;
+    font-weight: 800;
+    max-width: 900px;
+    margin: 0 auto 24px;
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #fff 18%, #b8b2ff 48%, var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-subtitle {
+    max-width: 680px;
+    margin: 0 auto 36px;
+    color: var(--muted);
+    font-size: clamp(16px, 2vw, 20px);
+  }
+  .hero-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 24px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-size: 14px;
+    font-weight: 800;
+    transition: transform .16s ease, filter .16s ease, border-color .16s ease, background .16s ease;
+  }
+  .btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+  .btn-primary { background: var(--accent); color: white; box-shadow: 0 16px 34px rgba(124,111,222,.25); }
+  .btn-outline { background: rgba(255,255,255,.03); border-color: var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: rgba(91,200,245,.5); }
+
+  section { padding: 78px 0; }
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 28px;
+    margin-bottom: 28px;
+  }
+  .section-label {
+    color: var(--accent2);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  h2 {
+    font-family: "Space Grotesk", Inter, sans-serif;
+    font-size: clamp(30px, 4vw, 48px);
+    line-height: 1;
+    letter-spacing: -.04em;
+    font-weight: 800;
+  }
+  .section-desc {
+    max-width: 620px;
+    color: var(--muted);
+    font-size: 16px;
+  }
+
+  .addons-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+  }
+  .addon-card {
+    background:
+      radial-gradient(circle at top right, rgba(124,111,222,.18), transparent 18rem),
+      linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)),
+      var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    position: relative;
+    transition: transform .18s ease, border-color .18s ease;
+  }
+  .addon-card:hover { transform: translateY(-5px); border-color: rgba(124,111,222,.75); }
+  .addon-card.secondary {
+    background:
+      radial-gradient(circle at top right, rgba(240,160,75,.16), transparent 18rem),
+      linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)),
+      var(--card);
+  }
+  .addon-card.coming {
+    border-style: dashed;
+    background: rgba(255,255,255,.025);
+    box-shadow: none;
+  }
+  .addon-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .addon-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    background: rgba(124,111,222,.18);
+    font-size: 25px;
+    border: 1px solid rgba(124,111,222,.35);
+  }
+  .secondary .addon-icon { background: rgba(240,160,75,.14); border-color: rgba(240,160,75,.35); }
+  .pill {
+    border: 1px solid rgba(91,200,245,.38);
+    color: #a7eaff;
+    background: rgba(91,200,245,.10);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .addon-card h3 {
+    font-family: "Space Grotesk", Inter, sans-serif;
+    font-size: 28px;
+    line-height: 1;
+    letter-spacing: -.04em;
+    margin-bottom: 12px;
+  }
+  .addon-card p { color: var(--muted); font-size: 15px; margin-bottom: 20px; }
+  .feature-list {
+    display: grid;
+    gap: 10px;
+    margin: auto 0 24px;
+    list-style: none;
+  }
+  .feature-list li {
+    display: flex;
+    gap: 10px;
+    color: var(--soft);
+    font-size: 14px;
+  }
+  .check {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--accent2);
+    background: rgba(91,200,245,.09);
+    border: 1px solid rgba(91,200,245,.24);
+    font-size: 11px;
+    margin-top: 2px;
+  }
+  .addon-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; }
+
+  .details-layout {
+    display: grid;
+    grid-template-columns: 1.05fr .95fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+  .info-panel, .tree-panel, .future-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+  }
+  .info-panel h3, .tree-panel h3, .future-panel h3 {
+    font-family: "Space Grotesk", Inter, sans-serif;
+    font-size: 24px;
+    letter-spacing: -.03em;
+    margin-bottom: 12px;
+  }
+  .info-panel p, .future-panel p { color: var(--muted); font-size: 15px; }
+  .mini-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 22px;
+  }
+  .mini {
+    background: rgba(255,255,255,.035);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 13px;
+    padding: 16px;
+  }
+  .mini strong { display: block; margin-bottom: 5px; font-size: 14px; }
+  .mini span { display: block; color: var(--muted); font-size: 13px; }
+
+  .tree {
+    margin-top: 18px;
+    background: #0e0e16;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 14px;
+    padding: 18px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    overflow-x: auto;
+  }
+  .folder { color: var(--accent2); }
+  .file { color: var(--accent3); }
+  .muted { color: var(--muted); }
+  code {
+    background: rgba(124,111,222,.13);
+    border: 1px solid rgba(124,111,222,.25);
+    color: #c9c5ff;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: .92em;
+  }
+
+  .future-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .future-card {
+    border: 1px dashed var(--border);
+    background: rgba(255,255,255,.025);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .future-card h4 {
+    font-family: "Space Grotesk", Inter, sans-serif;
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .future-card p { color: var(--muted); font-size: 13px; }
+
+  .install-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .step {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+  }
+  .step-num {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: white;
+    font-weight: 900;
+    background: var(--accent);
+    margin-bottom: 16px;
+  }
+  .step h4 { margin-bottom: 8px; }
+  .step p { color: var(--muted); font-size: 13px; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 36px 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .footer-inner {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  footer a { color: var(--accent2); }
+
+  @media (max-width: 900px) {
+    .addons-grid, .details-layout, .install-steps { grid-template-columns: 1fr; }
+    .future-grid { grid-template-columns: 1fr; }
+    .section-head { align-items: flex-start; flex-direction: column; }
+  }
+  @media (max-width: 640px) {
+    .nav-links { display: none; }
+    .hero { padding-top: 74px; }
+    .mini-grid { grid-template-columns: 1fr; }
+    .addon-card { padding: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container nav-inner">
+    <a class="brand" href="#top" aria-label="Calisto3D Blender Tools home">
+      <span class="brand-mark">✦</span>
+      <span>Calisto3D Tools</span>
+    </a>
+    <div class="nav-links">
+      <a href="#addons">Add-ons</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#future">Future</a>
+      <a href="https://github.com/calisto3d" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<main id="top">
+  <section class="hero">
+    <div class="container">
+      <div class="badge">Blender Add-ons · Asset Pipeline</div>
+      <h1><span class="gradient-text">Cleaner exports</span><br>for faster worlds.</h1>
+      <p class="hero-subtitle">
+        A collection of Blender tools by @calisto3d for preparing, baking, organizing and exporting 3D assets with less repetitive work.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#addons">Explore add-ons</a>
+        <a class="btn btn-outline" href="https://github.com/calisto3d" target="_blank" rel="noopener">View GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="addons">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <div class="section-label">Add-ons</div>
+          <h2>Current tools</h2>
+        </div>
+        <p class="section-desc">
+          This page can work as a hub for UEFN Exporter, Batch Exporter and any future Blender add-ons you publish.
+        </p>
+      </div>
+
+      <div class="addons-grid">
+        <article class="addon-card">
+          <div class="addon-top">
+            <div class="addon-icon">🎮</div>
+            <span class="pill">v1.0</span>
+          </div>
+          <h3>UEFN Exporter</h3>
+          <p>
+            Prepare assets for UEFN / Unreal Engine with naming, pivot tools, texture baking, Smart UV generation and clean mesh-only export.
+          </p>
+          <ul class="feature-list">
+            <li><span class="check">✓</span><span>Batch export multiple selected meshes at once</span></li>
+            <li><span class="check">✓</span><span>Bake Albedo, Normal, Roughness, Metallic, AO, Emissive and Opacity</span></li>
+            <li><span class="check">✓</span><span>Smart UV Project with Island Margin, Scale to Bounds and Bake Padding</span></li>
+            <li><span class="check">✓</span><span>Exports each mesh into its own <code>SM_AssetName</code> folder</span></li>
+          </ul>
+          <div class="addon-actions">
+            <a class="btn btn-primary" href="https://github.com/calisto3d/UEFN-Exporter-Blender-Addon/releases" target="_blank" rel="noopener">Download</a>
+            <a class="btn btn-outline" href="https://github.com/calisto3d/UEFN-Exporter-Blender-Addon" target="_blank" rel="noopener">Repository</a>
+          </div>
+        </article>
+
+        <article class="addon-card secondary">
+          <div class="addon-top">
+            <div class="addon-icon">📦</div>
+            <span class="pill">Exporter</span>
+          </div>
+          <h3>Batch Exporter</h3>
+          <p>
+            Export selected Blender objects faster, either as separate files or as one merged file, directly from the 3D Viewport sidebar.
+          </p>
+          <ul class="feature-list">
+            <li><span class="check">✓</span><span>Export each selected object as its own file</span></li>
+            <li><span class="check">✓</span><span>Optional merged export for selected objects</span></li>
+            <li><span class="check">✓</span><span>Format selector for FBX, OBJ, GLTF and STL</span></li>
+            <li><span class="check">✓</span><span>Simple folder picker inside Blender</span></li>
+          </ul>
+          <div class="addon-actions">
+            <a class="btn btn-primary" href="https://github.com/calisto3d/batch-exporter-blender/releases" target="_blank" rel="noopener">Download</a>
+            <a class="btn btn-outline" href="https://github.com/calisto3d/batch-exporter-blender" target="_blank" rel="noopener">Repository</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="workflow">
+    <div class="container details-layout">
+      <div class="info-panel">
+        <div class="section-label">UEFN Workflow</div>
+        <h3>Built for organized asset output</h3>
+        <p>
+          UEFN Exporter keeps the bake and export steps separate: textures are generated during baking, while the export step sends only the mesh to the asset folder.
+        </p>
+        <div class="mini-grid">
+          <div class="mini"><strong>1. Prepare</strong><span>Rename selected meshes and fix pivots to bottom-center.</span></div>
+          <div class="mini"><strong>2. Bake</strong><span>Generate the baked texture maps using Cycles.</span></div>
+          <div class="mini"><strong>3. Create baked mesh</strong><span>Duplicate the mesh, apply baked material and keep only the bake/export UV.</span></div>
+          <div class="mini"><strong>4. Export</strong><span>Batch export selected meshes into individual folders.</span></div>
+        </div>
+      </div>
+
+      <div class="tree-panel">
+        <div class="section-label">Output example</div>
+        <h3>Per-asset folders</h3>
+        <p class="muted">Example export structure for UEFN Exporter:</p>
+        <div class="tree">
+          <div><span class="folder">📁 exports/</span></div>
+          <div>&nbsp;&nbsp;<span class="folder">📁 SM_Magic_Cube/</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">📄 SM_Magic_Cube.fbx</span></div>
+          <div>&nbsp;&nbsp;<span class="folder">📁 SM_Pizza_Topping/</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">📄 SM_Pizza_Topping.fbx</span></div>
+          <div>&nbsp;&nbsp;<span class="muted">Textures are saved by the bake step.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="future">
+    <div class="container future-panel">
+      <div class="section-label">Future add-ons</div>
+      <h3>Ready to grow with your tools</h3>
+      <p>
+        When you create another Blender add-on, duplicate one of these cards, change the title, description and links, then publish the same <code>index.html</code> again.
+      </p>
+      <div class="future-grid">
+        <div class="future-card">
+          <h4>Next Add-on</h4>
+          <p>Use this slot for the next tool you release.</p>
+        </div>
+        <div class="future-card">
+          <h4>Material Tool</h4>
+          <p>Perfect for a shader, texture or material workflow add-on.</p>
+        </div>
+        <div class="future-card">
+          <h4>UEFN Utility</h4>
+          <p>Add another UEFN-focused helper with the same visual identity.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <div class="section-label">Installation</div>
+          <h2>Install any add-on</h2>
+        </div>
+        <p class="section-desc">The process is the same for most Blender add-ons packaged as a <code>.zip</code> or <code>.py</code> file.</p>
+      </div>
+      <div class="install-steps">
+        <div class="step"><div class="step-num">1</div><h4>Download</h4><p>Open the add-on release page and download the latest file.</p></div>
+        <div class="step"><div class="step-num">2</div><h4>Install</h4><p>In Blender, go to <code>Edit → Preferences → Add-ons → Install</code>.</p></div>
+        <div class="step"><div class="step-num">3</div><h4>Enable</h4><p>Search for the add-on name and activate the checkbox.</p></div>
+        <div class="step"><div class="step-num">4</div><h4>Open panel</h4><p>Press <code>N</code> in the 3D Viewport and open the add-on tab.</p></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container footer-inner">
+    <span>Calisto3D Blender Tools</span>
+    <span>Made by <a href="https://github.com/calisto3d" target="_blank" rel="noopener">@calisto3d</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
