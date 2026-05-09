@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Batch Exporter — Blender Add-on by @calisto3d</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0e0f11;
+      --surface: #16181c;
+      --border: #2a2d34;
+      --accent: #e07b3f;
+      --accent2: #f0a96a;
+      --text: #d4d6db;
+      --muted: #6b7180;
+      --white: #f0f1f3;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+      line-height: 1.7;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.13;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .wrap { position: relative; z-index: 1; max-width: 880px; margin: 0 auto; padding: 0 28px; }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(14,15,17,0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 0;
+    }
+    nav .wrap { display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; color: var(--white); }
+    .nav-logo span { color: var(--accent); }
+    .nav-link { color: var(--muted); text-decoration: none; font-size: 13px; transition: color .2s; }
+    .nav-link:hover { color: var(--accent2); }
+    .hero { padding: 100px 0 60px; }
+    .hero-tag {
+      display: inline-block; font-size: 11px; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent);
+      padding: 4px 12px; border-radius: 2px; margin-bottom: 28px;
+      opacity: 0; animation: fadeUp .6s ease forwards .1s;
+    }
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(42px, 7vw, 72px);
+      font-weight: 800; color: var(--white); line-height: 1.05;
+      letter-spacing: -2px; margin-bottom: 24px;
+      opacity: 0; animation: fadeUp .6s ease forwards .2s;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+    .hero-sub {
+      font-size: 16px; color: var(--muted); max-width: 520px; margin-bottom: 44px;
+      opacity: 0; animation: fadeUp .6s ease forwards .3s;
+    }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; opacity: 0; animation: fadeUp .6s ease forwards .4s; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 26px; border-radius: 4px;
+      font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500;
+      text-decoration: none; transition: all .2s; cursor: pointer; border: none;
+    }
+    .btn-primary { background: var(--accent); color: #0e0f11; }
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(224,123,63,.3); }
+    .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+    .preview { margin: 56px 0; opacity: 0; animation: fadeUp .7s ease forwards .5s; }
+    .preview-inner {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 36px; display: flex; align-items: center; gap: 48px; flex-wrap: wrap;
+    }
+    .preview-img-wrap img {
+      width: 200px; border-radius: 6px; border: 1px solid var(--border);
+      display: block; box-shadow: 0 16px 48px rgba(0,0,0,.6);
+    }
+    .preview-desc h3 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: var(--white); margin-bottom: 12px; }
+    .preview-desc p { color: var(--muted); font-size: 14px; max-width: 380px; }
+    .formats { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+    .format-badge {
+      background: rgba(224,123,63,.1); border: 1px solid rgba(224,123,63,.3);
+      color: var(--accent2); font-size: 13px; font-weight: 500;
+      padding: 6px 16px; border-radius: 4px; font-family: 'Syne', sans-serif;
+    }
+    .section { padding: 64px 0; border-top: 1px solid var(--border); }
+    .section-label { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+    .section h2 { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; color: var(--white); letter-spacing: -1px; margin-bottom: 40px; }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .feature-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      padding: 24px; transition: border-color .2s, transform .2s;
+    }
+    .feature-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .feature-icon { font-size: 24px; margin-bottom: 14px; }
+    .feature-card h4 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 600; color: var(--white); margin-bottom: 8px; }
+    .feature-card p { font-size: 13px; color: var(--muted); }
+    .steps { display: flex; flex-direction: column; gap: 16px; }
+    .step {
+      display: flex; gap: 20px; align-items: flex-start;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 20px 24px;
+    }
+    .step-num { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--accent); line-height: 1; flex-shrink: 0; width: 36px; }
+    .step-content h4 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 4px; }
+    .step-content p { font-size: 13px; color: var(--muted); }
+    code { background: rgba(224,123,63,.12); color: var(--accent2); padding: 2px 7px; border-radius: 3px; font-family: 'DM Mono', monospace; font-size: 12px; }
+    footer { border-top: 1px solid var(--border); padding: 40px 0; margin-top: 40px; }
+    footer .wrap { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .footer-credit { font-size: 13px; color: var(--muted); }
+    .footer-credit a { color: var(--accent); text-decoration: none; }
+    .footer-credit a:hover { color: var(--accent2); }
+    .footer-heart { font-size: 13px; color: var(--muted); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 600px) {
+      .preview-inner { flex-direction: column; }
+      .preview-img-wrap img { width: 100%; max-width: 260px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="nav-logo">Batch<span>Exporter</span></div>
+    <a class="nav-link" href="https://github.com/calisto3d" target="_blank">@calisto3d on GitHub ↗</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <section class="hero">
+    <div class="hero-tag">Blender Add-on · Free &amp; Open Source</div>
+    <h1>Export smarter,<br/>not <em>harder.</em></h1>
+    <p class="hero-sub">Batch Exporter lets you export every selected object as its own file — or all together — in multiple formats, directly from Blender's sidebar.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="https://github.com/calisto3d/batch-exporter-blender/releases" target="_blank">↓ Download Latest</a>
+      <a class="btn btn-ghost" href="https://github.com/calisto3d/batch-exporter-blender" target="_blank">View on GitHub</a>
+    </div>
+  </section>
+
+  <div class="preview">
+    <div class="preview-inner">
+      <div class="preview-img-wrap">
+        <img src="data:image/jpeg;base64,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" alt="Batch Exporter panel inside Blender" />
+      </div>
+      <div class="preview-desc">
+        <h3>Clean panel.<br/>Right in your sidebar.</h3>
+        <p>Press <code>N</code> in the 3D Viewport, open the <code>Batch Export</code> tab, pick your folder, choose your format, and hit Export. That's it.</p>
+        <div class="formats">
+          <span class="format-badge">FBX</span>
+          <span class="format-badge">OBJ</span>
+          <span class="format-badge">GLTF</span>
+          <span class="format-badge">STL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-label">Features</div>
+    <h2>Everything you need.</h2>
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">📦</div>
+        <h4>Separate files</h4>
+        <p>Each selected object is exported as its own file, named after the object automatically.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h4>Merged export</h4>
+        <p>Toggle "Export as one file" to combine all selected objects into a single export.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗂️</div>
+        <h4>Format selector</h4>
+        <p>Switch between FBX, OBJ, GLTF and STL with a single dropdown — no settings buried in menus.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📁</div>
+        <h4>Folder picker</h4>
+        <p>Browse to any folder on your system directly inside Blender. No hardcoded paths.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-label">Installation</div>
+    <h2>Up in 30 seconds.</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Download the file</h4>
+          <p>Grab the latest <code>.py</code> file from the Releases page on GitHub.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Install in Blender</h4>
+          <p>Go to <code>Edit → Preferences → Add-ons → Install</code> and select the downloaded file.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Enable it</h4>
+          <p>Tick the checkbox next to <code>Batch Exporter</code> in the add-ons list.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Open the panel</h4>
+          <p>Press <code>N</code> in the 3D Viewport and find the <code>Batch Export</code> tab on the right.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-credit">Made by <a href="https://github.com/calisto3d" target="_blank">@calisto3d</a> · Free to use under MIT License</div>
+    <div class="footer-heart">Built for the Blender community ♥</div>
+  </div>
+</footer>
+
+</body>
+</html>
